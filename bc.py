@@ -5,7 +5,7 @@ import matplotlib.image as mpimg
 import tensorflow.keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.layers import Dense, Flatten, Convolution2D, MaxPooling2D
+from tensorflow.keras.layers import Dense, Flatten, Convolution2D, MaxPooling2D, Dropout
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 import cv2
@@ -53,7 +53,24 @@ def img_preprocess(img):
 
 def nvidia_model():
     model = Sequential()
-
+    model.add(Convolution2D(24, (5, 5), strides=(2, 2), input_shape=(66, 200, 3), activation='elu'))
+    model.add(Convolution2D(36, (5, 5), strides=(2, 2), activation='elu'))
+    model.add(Convolution2D(48, (5, 5), strides=(2, 2), activation='elu'))
+    model.add(Convolution2D(64, (3, 3), activation='elu'))
+    model.add(Convolution2D(64, (3, 3), activation='elu'))
+    model.add(Dropout(0.5))
+    model.add(Flatten())
+    model.add(Dropout(0.5))
+    model.add(Dense(100, activation='elu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(50, activation='elu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(10, activation='elu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(1))
+    optimizer = Adam(learning_rate=0.001)
+    model.compile(loss='mse', optimizer=optimizer)
+    return model
 
 datadir = 'C:\\Users\\loanej\\dev\\Smart Technologies\\beta_simulator_windows\\BCData'
 columns = ['center', 'left', 'right', 'steering', 'throttle', 'reverse', 'speed']
@@ -121,6 +138,18 @@ plt.show()
 
 X_train = np.array(list(map(img_preprocess, X_train)))
 X_valid = np.array(list(map(img_preprocess, X_valid)))
+
+model = nvidia_model()
+print(model.summary())
+
+h = model.fit(X_train, y_train, epochs=22, validation_data=(X_valid, y_valid), batch_size=100, verbose=1, shuffle=1)
+plt.plot(h.history['loss'])
+plt.plot(h.history['val_loss'])
+plt.title('Loss')
+plt.xlabel('Epoch')
+plt.show()
+
+model.save('model.h5')
 
 
 
