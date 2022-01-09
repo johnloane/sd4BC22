@@ -28,9 +28,9 @@ def load_steering_img(datadir, df):
         image_path.append(os.path.join(datadir, center.strip()))
         steering.append(float(indexed_data[3]))
         image_path.append(os.path.join(datadir, left.strip()))
-        steering.append(float(indexed_data[3]))
+        steering.append(float(indexed_data[3]) + 0.15)
         image_path.append(os.path.join(datadir, right.strip()))
-        steering.append(float(indexed_data[3]))
+        steering.append(float(indexed_data[3]) - 0.15)
     image_paths = np.asarray(image_path)
     steering = np.asarray(steering)
     return image_paths, steering
@@ -60,7 +60,6 @@ def nvidia_model():
     model.add(Convolution2D(64, (3, 3), activation='elu'))
     model.add(Dropout(0.5))
     model.add(Flatten())
-    model.add(Dropout(0.5))
     model.add(Dense(100, activation='elu'))
     model.add(Dropout(0.5))
     model.add(Dense(50, activation='elu'))
@@ -83,7 +82,7 @@ data['left'] = data['left'].apply(path_leaf)
 data['right'] = data['right'].apply(path_leaf)
 
 num_bins = 25
-samples_per_bin = 300
+samples_per_bin = 200
 hist, bins = np.histogram(data['steering'], num_bins)
 print(bins)
 center = (bins[:-1] + bins[1:])*0.5
@@ -142,9 +141,10 @@ X_valid = np.array(list(map(img_preprocess, X_valid)))
 model = nvidia_model()
 print(model.summary())
 
-h = model.fit(X_train, y_train, epochs=22, validation_data=(X_valid, y_valid), batch_size=100, verbose=1, shuffle=1)
+h = model.fit(X_train, y_train, epochs=30, validation_data=(X_valid, y_valid), batch_size=100, verbose=1, shuffle=1)
 plt.plot(h.history['loss'])
 plt.plot(h.history['val_loss'])
+plt.legend(['training', 'validation'])
 plt.title('Loss')
 plt.xlabel('Epoch')
 plt.show()
